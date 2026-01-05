@@ -13,46 +13,52 @@
     }
 
     :root {
-      /* Light mode - Bold & Modern */
-      --bg-primary: #fafafa;
-      --bg-secondary: #ffffff;
-      --bg-tertiary: #f4f4f5;
-      --bg-card: #ffffff;
-      --text-primary: #09090b;
-      --text-secondary: #71717a;
-      --text-tertiary: #a1a1aa;
-      --border-color: #e4e4e7;
-      --border-light: #f4f4f5;
+      /* Light mode - Softer & Distraction-free */
+      --bg-primary: #fcfcfc;
+      --bg-secondary: #fefefe;
+      --bg-tertiary: #f8f8f9;
+      --bg-card: #fefefe;
+      --text-primary: #3d3d42;
+      --text-secondary: #6d6d73;
+      --text-tertiary: #9e9ea2;
+      --heading-color: #232323;
+      --border-color: #e8e8eb;
+      --border-light: #f0f0f2;
       --accent-color: #3b82f6;
       --accent-hover: #2563eb;
       --accent-light: #dbeafe;
+      --toggle-active: #3b82f6;
+      --btn-text: white;
       --delete-color: #ef4444;
       --delete-hover: #dc2626;
       --success-color: #10b981;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
     }
 
     body.dark-mode {
-      --bg-primary: #09090b;
-      --bg-secondary: #18181b;
+      --bg-primary: #0f0f10;
+      --bg-secondary: #1a1a1c;
       --bg-tertiary: #27272a;
-      --bg-card: #18181b;
-      --text-primary: #fafafa;
-      --text-secondary: #a1a1aa;
-      --text-tertiary: #71717a;
-      --border-color: #27272a;
-      --border-light: #3f3f46;
-      --accent-color: #3b82f6;
-      --accent-hover: #60a5fa;
+      --bg-card: #1a1a1c;
+      --text-primary: #e5e5ea;
+      --text-secondary: #9e9ea2;
+      --text-tertiary: #6d6d73;
+      --heading-color: #e5e5ea;
+      --border-color: #30303a;
+      --border-light: #42424c;
+      --accent-color: #1c1c1c;
+      --accent-hover: #2a2a2a;
       --accent-light: #1e3a8a;
+      --toggle-active: #101010;
+      --btn-text: #676767;
       --delete-color: #ef4444;
       --delete-hover: #f87171;
       --success-color: #10b981;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2);
     }
 
     body {
@@ -75,6 +81,13 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      z-index: 100;
+    }
+
+    .sidebar.hidden {
+      margin-left: -340px;
     }
 
     .sidebar-header {
@@ -300,10 +313,7 @@
       font-size: 36px;
       font-weight: 700;
       letter-spacing: -0.03em;
-      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--heading-color);
     }
 
     .subtitle {
@@ -375,7 +385,7 @@
       position: absolute;
       width: 66px;
       height: 36px;
-      background: var(--accent-color);
+      background: var(--toggle-active);
       border-radius: 10px;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--shadow-md);
@@ -397,7 +407,7 @@
     }
 
     .toggle-option.active {
-      color: white;
+      color: var(--btn-text);
     }
 
     .toggle-option.inactive {
@@ -408,7 +418,7 @@
     .download-btn {
       width: 100%;
       background: var(--accent-color);
-      color: white;
+      color: var(--btn-text);
       border: none;
       border-radius: 12px;
       padding: 16px 24px;
@@ -467,10 +477,110 @@
       background: var(--text-tertiary);
     }
 
+    /* Sidebar collapse button (inside header) */
+    .sidebar-collapse {
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: all 0.15s;
+    }
+
+    .sidebar-collapse:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .sidebar-collapse svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Floating expand button (only visible when sidebar hidden) */
+    .sidebar-expand {
+      position: fixed;
+      top: 20px;
+      left: 16px;
+      z-index: 101;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-expand:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .sidebar-expand:focus {
+      outline: none;
+    }
+
+    .sidebar-expand svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    body.sidebar-hidden .sidebar-expand {
+      display: flex;
+    }
+
+    /* Focus Mode - reduced distraction */
+    body.focus-mode label,
+    body.focus-mode .subtitle {
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    body.focus-mode .form-group:hover label {
+      opacity: 1;
+    }
+
+    body.focus-mode .btn-edit,
+    body.focus-mode .btn-download,
+    body.focus-mode .btn-delete,
+    body.focus-mode .clear-all-btn,
+    body.focus-mode .theme-toggle {
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    body.focus-mode button:hover {
+      opacity: 1;
+    }
+
+    /* Main content centering when sidebar is hidden */
+    body.sidebar-hidden .main {
+      padding: 48px 32px;
+    }
+
+    body.sidebar-hidden .container {
+      max-width: 640px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
         width: 280px;
+      }
+
+      .sidebar.hidden {
+        margin-left: -280px;
       }
 
       .main {
@@ -484,11 +594,24 @@
   </style>
 </head>
 <body>
+  <!-- Floating expand button (only visible when sidebar hidden) -->
+  <button class="sidebar-expand" id="sidebarExpand" title="Show sidebar (Cmd+\)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18l6-6-6-6"/>
+    </svg>
+  </button>
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="brand">
         <h2>TextDrop</h2>
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+        <div style="display: flex; gap: 4px;">
+          <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+          <button class="sidebar-collapse" id="sidebarCollapse" title="Hide sidebar (Cmd+\)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="search-box">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -776,6 +899,33 @@
 
     document.getElementById('clearAll').addEventListener('click', clearAllFiles);
 
+    // Sidebar toggle with localStorage persistence
+    function initSidebarState() {
+      const savedState = localStorage.getItem('sidebarVisible');
+      const shouldHide = savedState === 'false';
+      const sidebar = document.querySelector('.sidebar');
+
+      if (shouldHide) {
+        sidebar.classList.add('hidden');
+        document.body.classList.add('focus-mode');
+        document.body.classList.add('sidebar-hidden');
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const isHidden = sidebar.classList.contains('hidden');
+
+      sidebar.classList.toggle('hidden');
+      document.body.classList.toggle('focus-mode');
+      document.body.classList.toggle('sidebar-hidden');
+
+      localStorage.setItem('sidebarVisible', isHidden);
+    }
+
+    document.getElementById('sidebarCollapse').addEventListener('click', toggleSidebar);
+    document.getElementById('sidebarExpand').addEventListener('click', toggleSidebar);
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Cmd/Ctrl + S to download
@@ -788,11 +938,17 @@
         e.preventDefault();
         document.getElementById('searchInput').focus();
       }
+      // Cmd/Ctrl + \ to toggle sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        toggleSidebar();
+      }
     });
 
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       initTheme();
+      initSidebarState();
       loadAndRenderFiles();
       document.getElementById('content').focus();
     });
