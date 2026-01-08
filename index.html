@@ -414,6 +414,173 @@
       color: var(--text-tertiary);
     }
 
+    /* Preview Toggle */
+    .preview-toggle {
+      display: flex;
+      gap: 0;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 3px;
+      border: 1px solid var(--border-color);
+    }
+
+    .preview-toggle button {
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    .preview-toggle button.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .preview-toggle button:hover:not(.active) {
+      color: var(--text-primary);
+    }
+
+    .content-wrapper {
+      position: relative;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .label-row label {
+      margin-bottom: 0;
+    }
+
+    /* Markdown Preview */
+    .preview-container {
+      display: none;
+      width: 100%;
+      min-height: 240px;
+      padding: 16px 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-y: auto;
+      max-height: 400px;
+      user-select: text;
+    }
+
+    .preview-container.visible {
+      display: block;
+    }
+
+    .preview-container:empty::before {
+      content: 'Nothing to preview...';
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+
+    /* Markdown rendered styles */
+    .preview-container h1 {
+      font-size: 1.8em;
+      font-weight: 700;
+      margin: 0 0 0.6em 0;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--heading-color);
+    }
+
+    .preview-container h2 {
+      font-size: 1.4em;
+      font-weight: 600;
+      margin: 1.2em 0 0.5em 0;
+      padding-bottom: 0.2em;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--heading-color);
+    }
+
+    .preview-container h3 {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin: 1em 0 0.4em 0;
+      color: var(--heading-color);
+    }
+
+    .preview-container p {
+      margin: 0 0 1em 0;
+    }
+
+    .preview-container ul, .preview-container ol {
+      margin: 0 0 1em 0;
+      padding-left: 1.5em;
+    }
+
+    .preview-container li {
+      margin-bottom: 0.3em;
+    }
+
+    .preview-container code {
+      background: var(--bg-tertiary);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, Consolas, monospace;
+      font-size: 0.9em;
+    }
+
+    .preview-container pre {
+      background: var(--bg-tertiary);
+      padding: 12px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 0 0 1em 0;
+    }
+
+    .preview-container pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .preview-container blockquote {
+      margin: 0 0 1em 0;
+      padding: 0.5em 0 0.5em 1em;
+      border-left: 3px solid var(--accent-color);
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .preview-container strong {
+      font-weight: 600;
+    }
+
+    .preview-container a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .preview-container a:hover {
+      text-decoration: underline;
+    }
+
+    .preview-container hr {
+      border: none;
+      border-top: 1px solid var(--border-color);
+      margin: 1.5em 0;
+    }
+
+    textarea.hidden-for-preview {
+      display: none;
+    }
+
     /* Download Button */
     .download-btn {
       width: 100%;
@@ -651,8 +818,17 @@
       </div>
 
       <div class="form-group">
-        <label for="content">Content</label>
-        <textarea id="content" placeholder="Paste your text here..."></textarea>
+        <div class="label-row">
+          <label for="content">Content</label>
+          <div class="preview-toggle" id="previewToggle">
+            <button class="active" data-mode="write">Write</button>
+            <button data-mode="preview">Preview</button>
+          </div>
+        </div>
+        <div class="content-wrapper">
+          <textarea id="content" placeholder="Paste your text here..."></textarea>
+          <div class="preview-container" id="previewContainer"></div>
+        </div>
       </div>
 
       <button class="download-btn" id="download">Download File</button>
@@ -824,6 +1000,112 @@
       });
     }
 
+    // Simple markdown parser
+    function parseMarkdown(text) {
+      if (!text.trim()) return '';
+
+      let html = text;
+
+      // Escape HTML to prevent XSS
+      html = html.replace(/&/g, '&amp;')
+                 .replace(/</g, '&lt;')
+                 .replace(/>/g, '&gt;');
+
+      // Code blocks (```code```) - must be before other parsing
+      html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+      // Inline code (`code`)
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      // Headers
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+      // Bold and italic
+      html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
+      html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+      html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+      // Blockquotes
+      html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+      // Horizontal rule
+      html = html.replace(/^---$/gm, '<hr>');
+      html = html.replace(/^\*\*\*$/gm, '<hr>');
+
+      // Unordered lists
+      html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+      // Ordered lists
+      html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+      // Links [text](url)
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+      // Line breaks - convert double newlines to paragraphs
+      const blocks = html.split(/\n\n+/);
+      html = blocks.map(block => {
+        block = block.trim();
+        if (!block) return '';
+        // Don't wrap if already wrapped in block element
+        if (/^<(h[1-6]|ul|ol|li|pre|blockquote|hr)/.test(block)) {
+          return block;
+        }
+        // Convert single newlines to <br> within paragraphs
+        return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+      }).join('\n');
+
+      // Clean up empty paragraphs
+      html = html.replace(/<p><\/p>/g, '');
+      html = html.replace(/<p>(<(h[1-6]|ul|ol|pre|blockquote|hr)[^>]*>)/g, '$1');
+      html = html.replace(/(<\/(h[1-6]|ul|ol|pre|blockquote|hr)>)<\/p>/g, '$1');
+
+      return html;
+    }
+
+    // Preview mode state
+    let isPreviewMode = false;
+
+    function updatePreview() {
+      const content = document.getElementById('content').value;
+      const previewContainer = document.getElementById('previewContainer');
+      previewContainer.innerHTML = parseMarkdown(content);
+    }
+
+    function setPreviewMode(mode) {
+      const textarea = document.getElementById('content');
+      const previewContainer = document.getElementById('previewContainer');
+      const buttons = document.querySelectorAll('#previewToggle button');
+
+      isPreviewMode = mode === 'preview';
+
+      buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      if (isPreviewMode) {
+        updatePreview();
+        textarea.classList.add('hidden-for-preview');
+        previewContainer.classList.add('visible');
+      } else {
+        textarea.classList.remove('hidden-for-preview');
+        previewContainer.classList.remove('visible');
+        textarea.focus();
+      }
+    }
+
+    // Preview toggle buttons
+    document.querySelectorAll('#previewToggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setPreviewMode(btn.dataset.mode);
+      });
+    });
+
     // Format toggle
     document.querySelectorAll('.toggle-option').forEach(option => {
       option.addEventListener('click', () => {
@@ -858,9 +1140,10 @@
       saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
       loadAndRenderFiles();
 
-      // Clear and focus
+      // Clear, reset preview mode, and focus
       document.getElementById('content').value = '';
       document.getElementById('filename').value = '';
+      setPreviewMode('write');
       document.getElementById('content').focus();
     });
 
@@ -942,6 +1225,11 @@
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
         e.preventDefault();
         toggleSidebar();
+      }
+      // Cmd/Ctrl + P to toggle preview
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        e.preventDefault();
+        setPreviewMode(isPreviewMode ? 'write' : 'preview');
       }
     });
 
