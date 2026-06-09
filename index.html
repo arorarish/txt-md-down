@@ -6,7 +6,7 @@
   <title>TextDrop — Save Text Instantly</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -104,9 +104,11 @@
 
     .brand h2 {
       margin: 0;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+      font-optical-sizing: auto;
+      font-size: 23px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
 
     .theme-toggle {
@@ -324,6 +326,42 @@
     .filename-input {
       flex: 1 1 200px;
       min-width: 0;
+    }
+
+    /* Serif wordmark — the title shown in writing/focus mode.
+       Hidden when the sidebar (which carries the brand) is open. */
+    .wordmark {
+      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+      font-optical-sizing: auto;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--heading-color);
+      white-space: nowrap;
+      margin-right: 4px;
+      user-select: none;
+    }
+
+    body:not(.sidebar-hidden) .wordmark {
+      display: none;
+    }
+
+    /* Signature credit pinned at the bottom of the writing column */
+    .credit {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-tertiary);
+      margin: 14px 0 0;
+      letter-spacing: 0.01em;
+    }
+
+    .credit .author {
+      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+      font-style: italic;
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--text-secondary);
     }
 
     .container h1 {
@@ -567,7 +605,8 @@
     }
 
     .preview-container li {
-      margin-bottom: 0.3em;
+      margin-bottom: 0.25em;
+      line-height: 1.55;
     }
 
     .preview-container code {
@@ -841,6 +880,7 @@
   <div class="main">
     <div class="container">
       <div class="editor-toolbar">
+        <span class="wordmark">TextDrop</span>
         <input type="text" id="filename" class="filename-input" placeholder="Untitled" aria-label="File name">
         <div class="toggle-container" id="formatToggle" title="File format">
           <div class="toggle-slider" id="toggleSlider"></div>
@@ -861,6 +901,7 @@
       </div>
 
       <button class="download-btn" id="download">Download File</button>
+      <p class="credit">Made by <span class="author">Rishabh Arora</span></p>
     </div>
   </div>
 
@@ -1066,12 +1107,13 @@
       html = html.replace(/^---$/gm, '<hr>');
       html = html.replace(/^\*\*\*$/gm, '<hr>');
 
-      // Unordered lists
-      html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
-      html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-
-      // Ordered lists
-      html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+      // Lists — tag unordered and ordered items distinctly, then wrap each
+      // consecutive run in the right container so ordered items keep numbers.
+      html = html.replace(/^[\-\*] (.+)$/gm, '<li data-ul>$1</li>');
+      html = html.replace(/^\d+\. (.+)$/gm, '<li data-ol>$1</li>');
+      html = html.replace(/(?:<li data-ul>.*?<\/li>\n?)+/g, m => '<ul>' + m + '</ul>');
+      html = html.replace(/(?:<li data-ol>.*?<\/li>\n?)+/g, m => '<ol>' + m + '</ol>');
+      html = html.replace(/<li data-(?:ul|ol)>/g, '<li>');
 
       // Links [text](url)
       html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
@@ -1093,6 +1135,12 @@
       html = html.replace(/<p><\/p>/g, '');
       html = html.replace(/<p>(<(h[1-6]|ul|ol|pre|blockquote|hr)[^>]*>)/g, '$1');
       html = html.replace(/(<\/(h[1-6]|ul|ol|pre|blockquote|hr)>)<\/p>/g, '$1');
+
+      // Remove stray <br> tags around list elements. The paragraph pass turns
+      // the single newlines between list items into <br>, which renders as big
+      // gaps between bullets — strip those so lists stay tight.
+      html = html.replace(/<br>\s*(<\/?(?:ul|ol|li)\b[^>]*>)/g, '$1');
+      html = html.replace(/(<\/?(?:ul|ol|li)\b[^>]*>)\s*<br>/g, '$1');
 
       return html;
     }
