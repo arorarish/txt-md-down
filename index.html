@@ -979,6 +979,7 @@
     const storageKey = 'savedFiles';
     let currentFormat = 'txt';
     let allFiles = [];
+    let editingId = null;
 
     function getFiles() {
       return JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -1017,12 +1018,14 @@
     }
 
     function editFile(file) {
+      editingId = file.id;
       document.getElementById('filename').value = file.filename.replace(/\.(txt|md)$/, '');
       document.getElementById('content').value = file.content;
       const ext = file.filename.match(/\.(txt|md)$/);
       if (ext) {
         setFormat(ext[1]);
       }
+      document.getElementById('download').textContent = 'Save Changes';
       document.getElementById('content').focus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1287,10 +1290,25 @@
       URL.revokeObjectURL(url);
 
       const snippet = content.substring(0, 80).replace(/\n/g, ' ');
-      saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
+
+      if (editingId) {
+        // Editing an existing note — update it in place instead of copying
+        const files = getFiles();
+        const idx = files.findIndex(f => f.id === editingId);
+        if (idx !== -1) {
+          files[idx] = { ...files[idx], filename, snippet, content, timestamp: Date.now() };
+          localStorage.setItem(storageKey, JSON.stringify(files));
+        } else {
+          saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
+        }
+      } else {
+        saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
+      }
       loadAndRenderFiles();
 
-      // Clear, reset preview mode, and focus
+      // Reset edit state, clear, reset preview mode, and focus
+      editingId = null;
+      document.getElementById('download').textContent = 'Download File';
       document.getElementById('content').value = '';
       document.getElementById('filename').value = '';
       setPreviewMode('write');
