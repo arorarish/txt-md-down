@@ -818,7 +818,56 @@
     }
 
     body.sidebar-hidden .container {
-      max-width: 640px;
+      max-width: 760px;
+    }
+
+    /* Focus (zen) writing mode — a true blank page, toggled with Cmd+.
+       Uses CSS overrides only, so it never disturbs the saved sidebar state. */
+    .zen-dot {
+      position: fixed;
+      bottom: 14px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    .zen-dot::before {
+      content: '';
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      opacity: 0.4;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .zen-dot:hover::before {
+      opacity: 0.9;
+      transform: scale(1.25);
+    }
+
+    body.zen-mode .zen-dot::before {
+      opacity: 0.55;
+    }
+
+    body.zen-mode .sidebar,
+    body.zen-mode .sidebar-expand,
+    body.zen-mode .editor-toolbar,
+    body.zen-mode .download-btn,
+    body.zen-mode .credit {
+      display: none;
+    }
+
+    body.zen-mode .main {
+      padding: 56px 32px;
     }
 
     /* Responsive */
@@ -848,6 +897,7 @@
       <path d="M9 18l6-6-6-6"/>
     </svg>
   </button>
+  <button class="zen-dot" id="zenDot" title="Focus mode (⌘.)" aria-label="Toggle focus writing mode"></button>
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="brand">
@@ -1286,6 +1336,17 @@
     document.getElementById('sidebarCollapse').addEventListener('click', toggleSidebar);
     document.getElementById('sidebarExpand').addEventListener('click', toggleSidebar);
 
+    // Focus (zen) writing mode — hide all chrome, just text on the page
+    function toggleZen(force) {
+      const on = typeof force === 'boolean' ? force : !document.body.classList.contains('zen-mode');
+      document.body.classList.toggle('zen-mode', on);
+      if (on && !isPreviewMode) {
+        document.getElementById('content').focus();
+      }
+    }
+
+    document.getElementById('zenDot').addEventListener('click', () => toggleZen());
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Cmd/Ctrl + S to download
@@ -1307,6 +1368,16 @@
       if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
         e.preventDefault();
         setPreviewMode(isPreviewMode ? 'write' : 'preview');
+      }
+      // Cmd/Ctrl + . to toggle focus (zen) writing mode
+      if ((e.metaKey || e.ctrlKey) && e.key === '.') {
+        e.preventDefault();
+        toggleZen();
+      }
+      // Esc exits focus mode
+      if (e.key === 'Escape' && document.body.classList.contains('zen-mode')) {
+        e.preventDefault();
+        toggleZen(false);
       }
     });
 
