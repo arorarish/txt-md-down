@@ -885,13 +885,13 @@
     }
 
     .focus-btn .dot {
-      width: 10px;
-      height: 10px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
-      background: var(--text-tertiary);
-      box-shadow: 0 0 0 4px var(--bg-tertiary);
+      background: transparent;
+      border: 1.5px solid var(--text-tertiary);
       flex-shrink: 0;
-      transition: background 0.2s, box-shadow 0.2s;
+      transition: background 0.2s, border-color 0.2s;
     }
 
     .focus-btn .focus-label {
@@ -907,6 +907,7 @@
     .focus-btn .focus-label::after { content: 'Focus'; }
     body.zen-mode .focus-btn .focus-label::after { content: 'Exit focus'; }
 
+    /* Hover: reveal the pill + label (either state); ring stays hollow */
     .focus-btn:hover {
       background: var(--bg-secondary);
       border-color: var(--border-color);
@@ -915,8 +916,7 @@
     }
 
     .focus-btn:hover .dot {
-      background: var(--accent-color);
-      box-shadow: none;
+      border-color: var(--text-secondary);
     }
 
     .focus-btn:hover .focus-label {
@@ -924,22 +924,10 @@
       opacity: 1;
     }
 
-    /* While in focus mode the pill stays fully legible — your way back out */
-    body.zen-mode .focus-btn {
-      background: var(--bg-secondary);
-      border-color: var(--border-color);
-      color: var(--text-primary);
-      box-shadow: var(--shadow-sm);
-    }
-
+    /* In focus mode the dot fills in — a clear 'this is on' indicator */
     body.zen-mode .focus-btn .dot {
-      background: var(--accent-color);
-      box-shadow: none;
-    }
-
-    body.zen-mode .focus-btn .focus-label {
-      max-width: 90px;
-      opacity: 1;
+      background: var(--text-primary);
+      border-color: var(--text-primary);
     }
 
     body.zen-mode .sidebar,
