@@ -13,28 +13,28 @@
     }
 
     :root {
-      /* Light mode - Softer & Distraction-free */
-      --bg-primary: #fcfcfc;
-      --bg-secondary: #fefefe;
-      --bg-tertiary: #f8f8f9;
-      --bg-card: #fefefe;
-      --text-primary: #3d3d42;
-      --text-secondary: #6d6d73;
-      --text-tertiary: #9e9ea2;
-      --heading-color: #232323;
-      --border-color: #e8e8eb;
-      --border-light: #f0f0f2;
-      --accent-color: #3b82f6;
-      --accent-hover: #2563eb;
-      --accent-light: #dbeafe;
-      --toggle-active: #3b82f6;
-      --btn-text: white;
-      --delete-color: #ef4444;
-      --delete-hover: #dc2626;
-      --success-color: #10b981;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+      /* Light mode — warm paper & sepia (calm stationery) */
+      --bg-primary: #f7f3ec;     /* ivory paper */
+      --bg-secondary: #fdfbf7;   /* cards / inputs */
+      --bg-tertiary: #efe8db;    /* raised surfaces, hovers */
+      --bg-card: #fdfbf7;
+      --text-primary: #3a322a;   /* warm brown-black ink */
+      --text-secondary: #756b5c;
+      --text-tertiary: #a99d8b;
+      --heading-color: #2a241d;
+      --border-color: #e7ddcd;   /* warm hairline */
+      --border-light: #f0e8d9;
+      --accent-color: #8a6d4f;   /* sepia / taupe */
+      --accent-hover: #74583e;
+      --accent-light: #ece1d2;   /* soft focus tint */
+      --toggle-active: #8a6d4f;
+      --btn-text: #fdfbf7;       /* cream on accent */
+      --delete-color: #a8584f;   /* faded brick */
+      --delete-hover: #8f463e;
+      --success-color: #6f8f6a;
+      --shadow-sm: 0 1px 2px 0 rgb(74 58 40 / 0.04);
+      --shadow-md: 0 4px 6px -1px rgb(74 58 40 / 0.06), 0 2px 4px -2px rgb(74 58 40 / 0.05);
+      --shadow-lg: 0 10px 20px -4px rgb(74 58 40 / 0.08), 0 4px 6px -4px rgb(74 58 40 / 0.05);
     }
 
     body.dark-mode {
@@ -112,22 +112,33 @@
     }
 
     .theme-toggle {
-      background: var(--bg-tertiary);
+      background: transparent;
       border: none;
       border-radius: 8px;
-      padding: 8px 10px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
       cursor: pointer;
-      font-size: 18px;
-      transition: all 0.2s;
+      color: var(--text-tertiary);
+      transition: background 0.15s, color 0.15s;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .theme-toggle:hover {
-      background: var(--border-light);
-      transform: scale(1.05);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
     }
+
+    .theme-toggle svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .theme-toggle .icon-sun { display: none; }
+    body.dark-mode .theme-toggle .icon-moon { display: none; }
+    body.dark-mode .theme-toggle .icon-sun { display: block; }
 
     .search-box {
       position: relative;
@@ -178,21 +189,20 @@
     .clear-all-btn {
       width: 100%;
       background: transparent;
-      color: var(--delete-color);
-      border: 1px solid var(--border-color);
+      color: var(--text-tertiary);
+      border: 1px solid transparent;
       border-radius: 8px;
-      padding: 10px 16px;
+      padding: 9px 16px;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       font-family: inherit;
-      transition: all 0.2s;
+      transition: background 0.15s, color 0.15s;
     }
 
     .clear-all-btn:hover {
-      background: var(--delete-color);
-      color: white;
-      border-color: var(--delete-color);
+      background: var(--bg-tertiary);
+      color: var(--delete-color);
     }
 
     /* File Cards */
@@ -238,61 +248,46 @@
     .card-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 4px;
     }
 
     .card-actions button {
-      padding: 8px 12px;
+      padding: 7px 10px;
       font-size: 13px;
-      border-radius: 8px;
-      border: none;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 500;
       font-family: inherit;
-      transition: all 0.2s;
+      transition: background 0.15s, color 0.15s;
     }
 
+    .card-actions button:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* 'View' is the primary action — emphasised by weight, not colour */
     .btn-view {
-      background: var(--accent-color);
-      color: white;
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     .btn-view:hover {
-      background: var(--accent-hover);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
+      background: var(--accent-light);
+      color: var(--accent-hover);
     }
 
-    .btn-edit {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-color);
-    }
-
-    .btn-edit:hover {
-      background: var(--border-light);
-    }
-
-    .btn-download {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-color);
-    }
-
-    .btn-download:hover {
-      background: var(--border-light);
-    }
-
+    /* Delete stays quiet until you reach for it */
     .btn-delete {
-      background: transparent;
-      color: var(--delete-color);
-      border: 1px solid var(--border-color);
+      color: var(--text-tertiary);
     }
 
     .btn-delete:hover {
-      background: var(--delete-color);
-      color: white;
-      border-color: var(--delete-color);
+      background: transparent;
+      color: var(--delete-color);
     }
 
     /* Main Content */
@@ -362,6 +357,33 @@
       font-weight: 500;
       font-size: 13px;
       color: var(--text-secondary);
+    }
+
+    /* First-run hint — only shown on a blank slate, hidden once you engage */
+    .first-hint {
+      margin: -4px 0 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-tertiary);
+    }
+
+    .first-hint strong {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .first-hint kbd {
+      font-family: inherit;
+      font-size: 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 1px 6px;
+      color: var(--text-secondary);
+    }
+
+    body.hide-hint .first-hint {
+      display: none;
     }
 
     .container h1 {
@@ -842,44 +864,88 @@
 
     /* Focus (zen) writing mode — a true blank page, toggled with Cmd+.
        Uses CSS overrides only, so it never disturbs the saved sidebar state. */
-    .zen-dot {
+    /* Focus-mode control — a clearly visible dot that expands to a
+       labelled pill on hover (and stays labelled while in focus mode). */
+    .focus-btn {
       position: fixed;
-      bottom: 14px;
-      right: 16px;
-      width: 32px;
-      height: 32px;
+      bottom: 18px;
+      right: 18px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 7px;
+      height: 30px;
+      padding: 0 9px;
       background: transparent;
-      border: none;
-      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--text-secondary);
       cursor: pointer;
       z-index: 200;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     }
 
-    .zen-dot::before {
-      content: '';
-      width: 9px;
-      height: 9px;
+    .focus-btn .dot {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: var(--text-tertiary);
-      opacity: 0.4;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 0 0 4px var(--bg-tertiary);
+      flex-shrink: 0;
+      transition: background 0.2s, box-shadow 0.2s;
     }
 
-    .zen-dot:hover::before {
-      opacity: 0.9;
-      transform: scale(1.25);
+    .focus-btn .focus-label {
+      font-size: 12px;
+      font-weight: 500;
+      max-width: 0;
+      opacity: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: max-width 0.25s ease, opacity 0.2s ease;
     }
 
-    body.zen-mode .zen-dot::before {
-      opacity: 0.55;
+    .focus-btn .focus-label::after { content: 'Focus'; }
+    body.zen-mode .focus-btn .focus-label::after { content: 'Exit focus'; }
+
+    .focus-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .focus-btn:hover .dot {
+      background: var(--accent-color);
+      box-shadow: none;
+    }
+
+    .focus-btn:hover .focus-label {
+      max-width: 90px;
+      opacity: 1;
+    }
+
+    /* While in focus mode the pill stays fully legible — your way back out */
+    body.zen-mode .focus-btn {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    body.zen-mode .focus-btn .dot {
+      background: var(--accent-color);
+      box-shadow: none;
+    }
+
+    body.zen-mode .focus-btn .focus-label {
+      max-width: 90px;
+      opacity: 1;
     }
 
     body.zen-mode .sidebar,
     body.zen-mode .sidebar-expand,
     body.zen-mode .editor-toolbar,
+    body.zen-mode .first-hint,
     body.zen-mode .download-btn,
     body.zen-mode .credit {
       display: none;
@@ -916,13 +982,19 @@
       <path d="M9 18l6-6-6-6"/>
     </svg>
   </button>
-  <button class="zen-dot" id="zenDot" title="Focus mode (⌘.)" aria-label="Toggle focus writing mode"></button>
+  <button class="focus-btn" id="zenDot" title="Focus mode (⌘.)" aria-label="Toggle focus writing mode">
+    <span class="dot"></span>
+    <span class="focus-label"></span>
+  </button>
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="brand">
         <h2>TextDrop</h2>
         <div style="display: flex; gap: 4px;">
-          <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+          <button class="theme-toggle" id="themeToggle" title="Toggle light / dark" aria-label="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </button>
           <button class="sidebar-collapse" id="sidebarCollapse" title="Hide sidebar (Cmd+\)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M15 18l-6-6 6-6"/>
@@ -953,15 +1025,17 @@
         <input type="text" id="filename" class="filename-input" placeholder="Untitled" aria-label="File name">
         <div class="toggle-container" id="formatToggle" title="File format">
           <div class="toggle-slider" id="toggleSlider"></div>
-          <div class="toggle-option active" data-format="txt">.txt</div>
-          <div class="toggle-option inactive" data-format="md">.md</div>
+          <div class="toggle-option active" data-format="txt" title="Plain text file">.txt</div>
+          <div class="toggle-option inactive" data-format="md" title="Markdown — formatted text">.md</div>
         </div>
         <div class="preview-toggle" id="previewToggle">
           <div class="preview-slider" id="previewSlider"></div>
-          <button class="active" data-mode="write">Write</button>
-          <button data-mode="preview">Preview</button>
+          <button class="active" data-mode="write" title="Write your text">Write</button>
+          <button data-mode="preview" title="See it formatted">Preview</button>
         </div>
       </div>
+
+      <p class="first-hint" id="firstHint">Type or paste anything below, then <strong>Save</strong>. Press <kbd>⌘.</kbd> for distraction-free focus.</p>
 
       <div class="form-group form-group-content">
         <div class="content-wrapper">
@@ -970,7 +1044,7 @@
         </div>
       </div>
 
-      <button class="download-btn" id="download">Download File</button>
+      <button class="download-btn" id="download">Save</button>
       <p class="credit">Made by <span class="author">Rishabh A</span></p>
     </div>
   </div>
@@ -1308,7 +1382,7 @@
 
       // Reset edit state, clear, reset preview mode, and focus
       editingId = null;
-      document.getElementById('download').textContent = 'Download File';
+      document.getElementById('download').textContent = 'Save';
       document.getElementById('content').value = '';
       document.getElementById('filename').value = '';
       setPreviewMode('write');
@@ -1320,24 +1394,17 @@
       renderList(e.target.value.toLowerCase());
     });
 
+    // Dismiss the first-run hint as soon as the user starts writing
+    document.getElementById('content').addEventListener('input', () => {
+      document.body.classList.add('hide-hint');
+    });
+
     // Theme toggle with system preference detection
     function initTheme() {
       const savedTheme = localStorage.getItem('theme');
-      const themeToggle = document.getElementById('themeToggle');
-
-      let theme;
-      if (savedTheme) {
-        theme = savedTheme;
-      } else {
-        // Detect system preference
-        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-
+      const theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       if (theme === 'dark') {
         document.body.classList.add('dark-mode');
-        themeToggle.textContent = '☀️';
-      } else {
-        themeToggle.textContent = '🌙';
       }
     }
 
@@ -1345,7 +1412,6 @@
       document.body.classList.toggle('dark-mode');
       const isDark = document.body.classList.contains('dark-mode');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      this.textContent = isDark ? '☀️' : '🌙';
     });
 
     document.getElementById('clearAll').addEventListener('click', clearAllFiles);
@@ -1427,6 +1493,10 @@
       initTheme();
       initSidebarState();
       loadAndRenderFiles();
+      // First-run hint only on a truly blank slate (no saved files yet)
+      if (getFiles().length > 0) {
+        document.body.classList.add('hide-hint');
+      }
       document.getElementById('content').focus();
     });
   </script>
