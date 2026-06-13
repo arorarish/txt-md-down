@@ -6,7 +6,7 @@
   <title>TextDrop — Save Text Instantly</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,500&family=Hanken+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -104,11 +104,10 @@
 
     .brand h2 {
       margin: 0;
-      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
-      font-optical-sizing: auto;
-      font-size: 23px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .theme-toggle {
@@ -326,11 +325,10 @@
     /* Serif wordmark — the title shown in writing/focus mode.
        Hidden when the sidebar (which carries the brand) is open. */
     .wordmark {
-      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
-      font-optical-sizing: auto;
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       color: var(--heading-color);
       white-space: nowrap;
       margin-right: 4px;
@@ -357,33 +355,6 @@
       font-weight: 500;
       font-size: 13px;
       color: var(--text-secondary);
-    }
-
-    /* First-run hint — only shown on a blank slate, hidden once you engage */
-    .first-hint {
-      margin: -4px 0 16px;
-      font-size: 13px;
-      line-height: 1.5;
-      color: var(--text-tertiary);
-    }
-
-    .first-hint strong {
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    .first-hint kbd {
-      font-family: inherit;
-      font-size: 12px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 5px;
-      padding: 1px 6px;
-      color: var(--text-secondary);
-    }
-
-    body.hide-hint .first-hint {
-      display: none;
     }
 
     .container h1 {
@@ -864,8 +835,9 @@
 
     /* Focus (zen) writing mode — a true blank page, toggled with Cmd+.
        Uses CSS overrides only, so it never disturbs the saved sidebar state. */
-    /* Focus-mode control — a clearly visible dot that expands to a
-       labelled pill on hover (and stays labelled while in focus mode). */
+    /* Focus-mode control.
+       Off → a labelled pill "○ Focus" so its purpose is obvious.
+       On  → collapses to just a filled dot (you already know what it is). */
     .focus-btn {
       position: fixed;
       bottom: 18px;
@@ -874,14 +846,20 @@
       align-items: center;
       gap: 7px;
       height: 30px;
-      padding: 0 9px;
-      background: transparent;
-      border: 1px solid transparent;
+      padding: 0 12px 0 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
       border-radius: 999px;
       color: var(--text-secondary);
       cursor: pointer;
       z-index: 200;
-      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow-sm);
+      transition: padding 0.25s ease, background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .focus-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
     }
 
     .focus-btn .dot {
@@ -894,11 +872,15 @@
       transition: background 0.2s, border-color 0.2s;
     }
 
+    .focus-btn:hover .dot {
+      border-color: var(--text-secondary);
+    }
+
     .focus-btn .focus-label {
       font-size: 12px;
       font-weight: 500;
-      max-width: 0;
-      opacity: 0;
+      max-width: 90px;
+      opacity: 1;
       overflow: hidden;
       white-space: nowrap;
       transition: max-width 0.25s ease, opacity 0.2s ease;
@@ -907,33 +889,42 @@
     .focus-btn .focus-label::after { content: 'Focus'; }
     body.zen-mode .focus-btn .focus-label::after { content: 'Exit focus'; }
 
-    /* Hover: reveal the pill + label (either state); ring stays hollow */
-    .focus-btn:hover {
-      background: var(--bg-secondary);
-      border-color: var(--border-color);
-      color: var(--text-primary);
-      box-shadow: var(--shadow-sm);
+    /* In focus mode: collapse to just the filled dot */
+    body.zen-mode .focus-btn {
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+      padding: 0;
+      gap: 0;
     }
 
-    .focus-btn:hover .dot {
-      border-color: var(--text-secondary);
-    }
-
-    .focus-btn:hover .focus-label {
-      max-width: 90px;
-      opacity: 1;
-    }
-
-    /* In focus mode the dot fills in — a clear 'this is on' indicator */
     body.zen-mode .focus-btn .dot {
       background: var(--text-primary);
       border-color: var(--text-primary);
     }
 
+    body.zen-mode .focus-btn .focus-label {
+      max-width: 0;
+      opacity: 0;
+    }
+
+    /* In focus mode, hovering re-reveals the pill so 'Exit focus' is findable */
+    body.zen-mode .focus-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: 0 12px 0 10px;
+      gap: 7px;
+    }
+
+    body.zen-mode .focus-btn:hover .focus-label {
+      max-width: 90px;
+      opacity: 1;
+    }
+
     body.zen-mode .sidebar,
     body.zen-mode .sidebar-expand,
     body.zen-mode .editor-toolbar,
-    body.zen-mode .first-hint,
     body.zen-mode .download-btn,
     body.zen-mode .credit {
       display: none;
@@ -1022,8 +1013,6 @@
           <button data-mode="preview" title="See it formatted">Preview</button>
         </div>
       </div>
-
-      <p class="first-hint" id="firstHint">Type or paste anything below, then <strong>Save</strong>. Press <kbd>⌘.</kbd> for distraction-free focus.</p>
 
       <div class="form-group form-group-content">
         <div class="content-wrapper">
@@ -1382,11 +1371,6 @@
       renderList(e.target.value.toLowerCase());
     });
 
-    // Dismiss the first-run hint as soon as the user starts writing
-    document.getElementById('content').addEventListener('input', () => {
-      document.body.classList.add('hide-hint');
-    });
-
     // Theme toggle with system preference detection
     function initTheme() {
       const savedTheme = localStorage.getItem('theme');
@@ -1481,10 +1465,6 @@
       initTheme();
       initSidebarState();
       loadAndRenderFiles();
-      // First-run hint only on a truly blank slate (no saved files yet)
-      if (getFiles().length > 0) {
-        document.body.classList.add('hide-hint');
-      }
       document.getElementById('content').focus();
     });
   </script>
