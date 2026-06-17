@@ -220,6 +220,23 @@
       border-color: var(--border-light);
     }
 
+    /* A freshly saved note drops in and is briefly held in a warm glow,
+       then settles — the visible half of the "TextDrop" save moment. */
+    .card.just-saved {
+      animation: cardDrop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both,
+                 cardGlow 1.6s ease-out 0.1s both;
+    }
+
+    @keyframes cardDrop {
+      from { opacity: 0; transform: translateY(-10px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes cardGlow {
+      0%   { box-shadow: 0 0 0 1px var(--accent-color), var(--shadow-md); border-color: var(--accent-color); }
+      100% { box-shadow: var(--shadow-sm); border-color: var(--border-color); }
+    }
+
     .card .title {
       font-weight: 600;
       font-size: 15px;
@@ -700,6 +717,47 @@
       transform: translateY(0);
     }
 
+    /* Save moment — the button briefly confirms with a self-drawing check.
+       Greens are borrowed from --success-color so it reads as "kept", not "alert". */
+    .download-btn.is-saved {
+      background: var(--success-color);
+      color: var(--btn-text);
+      box-shadow: var(--shadow-md);
+      transform: translateY(0);
+      cursor: default;
+    }
+
+    .download-btn .save-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .download-btn .save-check {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+    }
+
+    .download-btn .save-check path {
+      stroke: currentColor;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 22;
+      stroke-dashoffset: 22;
+    }
+
+    .download-btn.is-saved .save-check path {
+      animation: drawCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.05s forwards;
+    }
+
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+
     /* Empty State */
     .empty-state {
       text-align: center;
@@ -799,6 +857,38 @@
     body.sidebar-hidden .sidebar-expand {
       display: flex;
     }
+
+    /* Tiny fullscreen toggle — a quiet floating control in the top-right corner */
+    .fs-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 201;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.2s;
+      opacity: 0.55;
+    }
+
+    .fs-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-secondary);
+      opacity: 1;
+    }
+
+    .fs-btn svg { width: 16px; height: 16px; }
+    .fs-btn .fs-exit { display: none; }
+    body.is-fullscreen .fs-btn .fs-enter { display: none; }
+    body.is-fullscreen .fs-btn .fs-exit { display: block; }
 
     /* Focus Mode - reduced distraction */
     body.focus-mode label,
@@ -934,6 +1024,79 @@
       padding: 56px 32px;
     }
 
+    /* Drop-to-open overlay — a calm paper sheet that fades in while dragging */
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: color-mix(in srgb, var(--bg-primary) 78%, transparent);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+    }
+
+    .drop-overlay.active {
+      display: flex;
+      animation: overlayIn 0.18s ease-out both;
+    }
+
+    @keyframes overlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .drop-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 44px 60px;
+      border: 2px dashed var(--accent-color);
+      border-radius: 18px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-lg);
+      pointer-events: none;
+      animation: dropCardIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes dropCardIn {
+      from { opacity: 0; transform: scale(0.97) translateY(6px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .drop-icon {
+      width: 34px;
+      height: 34px;
+      color: var(--accent-color);
+      margin-bottom: 4px;
+    }
+
+    .drop-title {
+      font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--heading-color);
+    }
+
+    .drop-sub {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-family: 'SF Mono', Monaco, Consolas, monospace;
+    }
+
+    /* Respect users who prefer less motion — keep the meaning, drop the movement */
+    @media (prefers-reduced-motion: reduce) {
+      .drop-overlay.active,
+      .drop-card { animation: none; }
+      .download-btn.is-saved .save-check path { animation: none; stroke-dashoffset: 0; }
+      .card.just-saved { animation: none; }
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
@@ -955,10 +1118,30 @@
   </style>
 </head>
 <body>
+  <!-- Drop-to-open overlay (shown while dragging a file over the window) -->
+  <div class="drop-overlay" id="dropOverlay" aria-hidden="true">
+    <div class="drop-card">
+      <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>
+      </svg>
+      <div class="drop-title">Drop to open</div>
+      <div class="drop-sub">.txt or .md</div>
+    </div>
+  </div>
+
   <!-- Floating expand button (only visible when sidebar hidden) -->
   <button class="sidebar-expand" id="sidebarExpand" title="Show sidebar (Cmd+\)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 18l6-6-6-6"/>
+    </svg>
+  </button>
+  <!-- Tiny fullscreen toggle (top-right corner) -->
+  <button class="fs-btn" id="fsBtn" title="Fullscreen (⇧⌘F)" aria-label="Toggle fullscreen">
+    <svg class="fs-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+    <svg class="fs-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M16 21v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
     </svg>
   </button>
   <button class="focus-btn" id="zenDot" title="Focus mode (⌘.)" aria-label="Toggle focus writing mode">
@@ -1031,6 +1214,7 @@
     let currentFormat = 'txt';
     let allFiles = [];
     let editingId = null;
+    let justSavedId = null;   // note to glow on the next render (cleared once shown)
 
     function getFiles() {
       return JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -1041,6 +1225,7 @@
       meta.id = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
       files.push(meta);
       localStorage.setItem(storageKey, JSON.stringify(files));
+      return meta.id;
     }
 
     function deleteFile(id) {
@@ -1136,6 +1321,9 @@
       filteredFiles.forEach(file => {
         const card = document.createElement('div');
         card.className = 'card';
+        if (file.id === justSavedId) {
+          card.classList.add('just-saved');
+        }
 
         const title = document.createElement('div');
         title.className = 'title';
@@ -1192,6 +1380,8 @@
         card.appendChild(actions);
         listEl.appendChild(card);
       });
+
+      justSavedId = null;   // glow is a one-time treat, not a permanent state
     }
 
     // Simple markdown parser
@@ -1349,22 +1539,40 @@
         if (idx !== -1) {
           files[idx] = { ...files[idx], filename, snippet, content, timestamp: Date.now() };
           localStorage.setItem(storageKey, JSON.stringify(files));
+          justSavedId = editingId;
         } else {
-          saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
+          justSavedId = saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
         }
       } else {
-        saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
+        justSavedId = saveFileMeta({ filename, snippet, content, timestamp: Date.now() });
       }
-      loadAndRenderFiles();
+      loadAndRenderFiles();   // the new card drops in + glows (justSavedId)
+      playSaveMoment();       // the button confirms with a self-drawing check
 
       // Reset edit state, clear, reset preview mode, and focus
       editingId = null;
-      document.getElementById('download').textContent = 'Save';
       document.getElementById('content').value = '';
       document.getElementById('filename').value = '';
       setPreviewMode('write');
       document.getElementById('content').focus();
     });
+
+    // The button half of the save moment: briefly become "Saved ✓", then rest.
+    let saveMomentTimer = null;
+    function playSaveMoment() {
+      const btn = document.getElementById('download');
+      clearTimeout(saveMomentTimer);
+      btn.classList.add('is-saved');
+      btn.innerHTML =
+        '<span class="save-label">' +
+          '<svg class="save-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>' +
+          'Saved' +
+        '</span>';
+      saveMomentTimer = setTimeout(() => {
+        btn.classList.remove('is-saved');
+        btn.textContent = 'Save';
+      }, 1400);
+    }
 
     // Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -1426,6 +1634,22 @@
 
     document.getElementById('zenDot').addEventListener('click', () => toggleZen());
 
+    // Fullscreen toggle — uses the native Fullscreen API
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        (document.documentElement.requestFullscreen || (() => Promise.reject())).call(document.documentElement)
+          .catch(() => {});
+      } else {
+        document.exitFullscreen?.();
+      }
+    }
+
+    document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
+    // Keep the icon in sync even when fullscreen is exited via Esc or the OS
+    document.addEventListener('fullscreenchange', () => {
+      document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Cmd/Ctrl + S to download
@@ -1453,12 +1677,77 @@
         e.preventDefault();
         toggleZen();
       }
+      // Ctrl/Cmd + Shift + F to toggle fullscreen
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        toggleFullscreen();
+      }
       // Esc exits focus mode
       if (e.key === 'Escape' && document.body.classList.contains('zen-mode')) {
         e.preventDefault();
         toggleZen(false);
       }
     });
+
+    // Drag & drop a .txt / .md onto the window to open it in the editor
+    const dropOverlay = document.getElementById('dropOverlay');
+    let dragDepth = 0;   // counts nested dragenter/leave so the overlay doesn't flicker
+
+    function draggingFiles(e) {
+      return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+    }
+
+    function showDropOverlay() { dropOverlay.classList.add('active'); }
+    function hideDropOverlay() { dragDepth = 0; dropOverlay.classList.remove('active'); }
+
+    window.addEventListener('dragenter', (e) => {
+      if (!draggingFiles(e)) return;
+      e.preventDefault();
+      dragDepth++;
+      showDropOverlay();
+    });
+
+    window.addEventListener('dragover', (e) => {
+      if (!draggingFiles(e)) return;
+      e.preventDefault();   // required so the browser allows a drop here
+    });
+
+    window.addEventListener('dragleave', (e) => {
+      if (!draggingFiles(e)) return;
+      dragDepth--;
+      if (dragDepth <= 0) hideDropOverlay();
+    });
+
+    window.addEventListener('drop', (e) => {
+      if (!draggingFiles(e)) return;
+      e.preventDefault();
+      hideDropOverlay();
+
+      const files = Array.from(e.dataTransfer.files || []);
+      const file = files.find(f => /\.(txt|md|markdown)$/i.test(f.name))
+                || files.find(f => f.type.startsWith('text/'))
+                || files[0];
+      if (file) openDroppedFile(file);
+    });
+
+    function openDroppedFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = typeof reader.result === 'string' ? reader.result : '';
+        const ext = (file.name.match(/\.(md|markdown)$/i)) ? 'md' : 'txt';
+
+        // A dropped file opens as a fresh, unsaved note
+        editingId = null;
+        document.getElementById('download').textContent = 'Save';
+        document.getElementById('filename').value = file.name.replace(/\.(txt|md|markdown)$/i, '');
+        document.getElementById('content').value = text;
+        setFormat(ext);
+        setPreviewMode('write');
+        document.getElementById('content').focus();
+      };
+      reader.onerror = () => alert("Sorry — couldn't read that file.");
+      reader.readAsText(file);
+    }
 
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
