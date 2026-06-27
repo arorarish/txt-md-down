@@ -1015,6 +1015,152 @@
     body.is-fullscreen .fs-btn .fs-enter { display: none; }
     body.is-fullscreen .fs-btn .fs-exit { display: block; }
 
+    /* Help / shortcuts button — a quiet companion to the fullscreen toggle, top-right */
+    .help-btn {
+      position: fixed;
+      top: 16px;
+      right: 54px;
+      z-index: 201;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.2s;
+      opacity: 0.55;
+    }
+
+    .help-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-secondary);
+      opacity: 1;
+    }
+
+    .help-btn:focus { outline: none; }
+    .help-btn svg { width: 16px; height: 16px; }
+    body.zen-mode .help-btn { display: none; }
+
+    /* Shortcuts overlay — a calm modal sheet, reusing the drop-overlay motion */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+
+    .help-overlay.active {
+      display: flex;
+      animation: overlayIn 0.18s ease-out both;
+    }
+
+    .help-card {
+      width: 100%;
+      max-width: 540px;
+      max-height: 82vh;
+      overflow-y: auto;
+      padding: 22px 24px 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: dropCardIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .help-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .help-head h3 {
+      margin: 0;
+      font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--heading-color);
+    }
+
+    .help-close {
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .help-close:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+    .help-close svg { width: 16px; height: 16px; }
+
+    .help-section h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-tertiary);
+      font-weight: 700;
+      margin: 18px 0 6px;
+    }
+
+    .help-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .help-row:last-child { border-bottom: none; }
+
+    .help-desc {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .help-keys {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .help-keys kbd {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 4px 7px;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .help-foot {
+      margin: 16px 0 0;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
     /* Focus Mode - reduced distraction */
     body.focus-mode label,
     body.focus-mode .subtitle {
@@ -1218,7 +1364,9 @@
     /* Respect users who prefer less motion — keep the meaning, drop the movement */
     @media (prefers-reduced-motion: reduce) {
       .drop-overlay.active,
-      .drop-card { animation: none; }
+      .drop-card,
+      .help-overlay.active,
+      .help-card { animation: none; }
       .download-btn.is-saved .save-check path { animation: none; stroke-dashoffset: 0; }
       .card.just-saved { animation: none; }
     }
@@ -1270,6 +1418,51 @@
       <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M16 21v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
     </svg>
   </button>
+  <!-- Shortcuts / help button (top-right, beside fullscreen) -->
+  <button class="help-btn" id="helpBtn" title="Shortcuts (?)" aria-label="Keyboard shortcuts" aria-haspopup="dialog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+    </svg>
+  </button>
+  <!-- Shortcuts & features panel (opened by the ? button or the ? key) -->
+  <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts and features">
+    <div class="help-card">
+      <div class="help-head">
+        <h3>Shortcuts &amp; features</h3>
+        <button class="help-close" id="helpClose" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="help-section">
+        <h4>Writing</h4>
+        <div class="help-row"><span class="help-desc">Indent / outdent a line or bullet</span><span class="help-keys"><kbd>Tab</kbd><kbd>⇧ Tab</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Continue a list on the next line</span><span class="help-keys"><kbd>Enter</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Heading 1 / 2 / 3</span><span class="help-keys"><kbd>⌘⌥1</kbd><kbd>⌘⌥2</kbd><kbd>⌘⌥3</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Clear heading</span><span class="help-keys"><kbd>⌘⌥0</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Bold / Italic the selection</span><span class="help-keys"><kbd>⌘B</kbd><kbd>⌘I</kbd></span></div>
+      </div>
+
+      <div class="help-section">
+        <h4>App</h4>
+        <div class="help-row"><span class="help-desc">Save / download</span><span class="help-keys"><kbd>⌘S</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Search files</span><span class="help-keys"><kbd>⌘K</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Show / hide sidebar</span><span class="help-keys"><kbd>⌘\</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Write / Preview</span><span class="help-keys"><kbd>⌘P</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Focus (zen) mode</span><span class="help-keys"><kbd>⌘.</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Fullscreen</span><span class="help-keys"><kbd>⇧⌘F</kbd></span></div>
+      </div>
+
+      <div class="help-section">
+        <h4>Good to know</h4>
+        <div class="help-row"><span class="help-desc">Cycle theme — light · dark · email</span><span class="help-keys"><kbd>theme icon</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Open a file — drag it onto the window</span><span class="help-keys"><kbd>.txt / .md</kbd></span></div>
+        <div class="help-row"><span class="help-desc">Open this panel anytime</span><span class="help-keys"><kbd>?</kbd></span></div>
+      </div>
+
+      <p class="help-foot">⌘ is Ctrl on Windows / Linux.</p>
+    </div>
+  </div>
   <button class="focus-btn" id="zenDot" title="Focus mode (⌘.)" aria-label="Toggle focus writing mode">
     <span class="dot"></span>
     <span class="focus-label"></span>
@@ -2056,6 +2249,25 @@
       document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
     });
 
+    // Shortcuts / help panel
+    const helpOverlay = document.getElementById('helpOverlay');
+    let helpOpen = false;
+    function openHelp() {
+      helpOverlay.classList.add('active');
+      helpOpen = true;
+      document.getElementById('helpClose').focus();
+    }
+    function closeHelp() {
+      helpOverlay.classList.remove('active');
+      helpOpen = false;
+      document.getElementById('helpBtn').focus();
+    }
+    function toggleHelp() { helpOpen ? closeHelp() : openHelp(); }
+
+    document.getElementById('helpBtn').addEventListener('click', toggleHelp);
+    document.getElementById('helpClose').addEventListener('click', closeHelp);
+    helpOverlay.addEventListener('click', (e) => { if (e.target === helpOverlay) closeHelp(); });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Cmd/Ctrl + S to download
@@ -2087,6 +2299,17 @@
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'f' || e.key === 'F')) {
         e.preventDefault();
         toggleFullscreen();
+      }
+      // ? opens the shortcuts panel (ignored while typing in a field)
+      if (e.key === '?' && !/^(INPUT|TEXTAREA)$/.test((e.target || {}).tagName)) {
+        e.preventDefault();
+        toggleHelp();
+      }
+      // Esc closes the shortcuts panel first, otherwise exits focus mode
+      if (e.key === 'Escape' && helpOpen) {
+        e.preventDefault();
+        closeHelp();
+        return;
       }
       // Esc exits focus mode
       if (e.key === 'Escape' && document.body.classList.contains('zen-mode')) {
