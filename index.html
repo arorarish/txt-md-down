@@ -1609,6 +1609,62 @@
       return nl === -1 ? value.length : nl;
     }
 
+    // Make the caret's line a heading of `level` (1–3). Pressing the same level
+    // again, or level 0, turns it back into a plain line — so it toggles.
+    function setHeading(level) {
+      const val = editor.value;
+      const sel = editor.selectionStart;
+      const ls = lineStartAt(val, sel);
+      const le = lineEndAt(val, sel);
+      const line = val.slice(ls, le);
+      const m = line.match(/^(#{1,6})[ \t]+/);
+      const oldPrefix = m ? m[0].length : 0;
+      const curLevel = m ? m[1].length : 0;
+      const body = line.slice(oldPrefix);
+
+      let newLine, newPrefix;
+      if (level === 0 || level === curLevel) {
+        newLine = body; newPrefix = 0;                 // toggle back to a normal line
+      } else {
+        const p = '#'.repeat(level) + ' ';
+        newLine = p + body; newPrefix = p.length;
+      }
+      editRange(ls, le, newLine);
+      const offsetInBody = Math.max(0, sel - ls - oldPrefix);   // keep caret on the same word
+      const caret = ls + newPrefix + offsetInBody;
+      editor.setSelectionRange(caret, caret);
+    }
+
+    // Wrap (or unwrap) the selection in a marker like ** or *. With no selection,
+    // drop an empty pair and park the caret inside, ready to type.
+    function wrapInline(marker) {
+      const val = editor.value;
+      const s = editor.selectionStart;
+      const e = editor.selectionEnd;
+      const n = marker.length;
+
+      if (s === e) {
+        editRange(s, e, marker + marker);
+        editor.setSelectionRange(s + n, s + n);
+        return;
+      }
+      const selected = val.slice(s, e);
+      const before = val.slice(Math.max(0, s - n), s);
+      const after = val.slice(e, e + n);
+
+      if (before === marker && after === marker) {
+        editRange(s - n, e + n, selected);                       // markers sit just outside → strip
+        editor.setSelectionRange(s - n, s - n + selected.length);
+      } else if (selected.length >= 2 * n && selected.startsWith(marker) && selected.endsWith(marker)) {
+        const inner = selected.slice(n, selected.length - n);    // markers are inside selection → strip
+        editRange(s, e, inner);
+        editor.setSelectionRange(s, s + inner.length);
+      } else {
+        editRange(s, e, marker + selected + marker);             // add them
+        editor.setSelectionRange(s + n, e + n);
+      }
+    }
+
     editor.addEventListener('keydown', (e) => {
       if (isPreviewMode) return;
       const val = editor.value;
@@ -1616,6 +1672,19 @@
       const selEnd = editor.selectionEnd;
       const collapsed = selStart === selEnd;
       const listRe = /^([ \t]*)([-*+]|\d+\.)([ \t]+)(.*)$/;
+      const mod = e.metaKey || e.ctrlKey;
+
+      // ---- Headings : Cmd/Ctrl+Alt+1/2/3 (Alt+0 clears) ----
+      // Uses e.code so it's reliable even when Alt remaps the number keys on macOS.
+      if (mod && e.altKey && /^Digit[0-3]$/.test(e.code)) {
+        e.preventDefault();
+        setHeading(parseInt(e.code.slice(5), 10));
+        return;
+      }
+
+      // ---- Bold / Italic : Cmd/Ctrl+B / Cmd/Ctrl+I ----
+      if (mod && !e.altKey && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); wrapInline('**'); return; }
+      if (mod && !e.altKey && (e.key === 'i' || e.key === 'I')) { e.preventDefault(); wrapInline('*'); return; }
 
       // ---- Tab / Shift+Tab : indent / outdent ----
       if (e.key === 'Tab') {
