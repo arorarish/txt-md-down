@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>TextDrop — Save Text Instantly</title>
+  <!-- Favicon: a small sepia 'T' tile, drawn inline so the app stays a single file -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%238a6d4f'/%3E%3Crect x='8' y='9' width='16' height='3.6' rx='1.6' fill='%23fdfbf7'/%3E%3Crect x='14.2' y='9' width='3.6' height='15' rx='1.4' fill='%23fdfbf7'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,500&family=Hanken+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,6 +37,9 @@
       --shadow-sm: 0 1px 2px 0 rgb(74 58 40 / 0.04);
       --shadow-md: 0 4px 6px -1px rgb(74 58 40 / 0.06), 0 2px 4px -2px rgb(74 58 40 / 0.05);
       --shadow-lg: 0 10px 20px -4px rgb(74 58 40 / 0.08), 0 4px 6px -4px rgb(74 58 40 / 0.05);
+      /* Scrollbar — faint warm ink; only deepens when you point right at it */
+      --scrollbar-thumb: rgb(74 58 40 / 0.14);
+      --scrollbar-thumb-hover: rgb(74 58 40 / 0.32);
     }
 
     body.dark-mode {
@@ -59,6 +64,8 @@
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+      --scrollbar-thumb: rgb(255 255 255 / 0.10);
+      --scrollbar-thumb-hover: rgb(255 255 255 / 0.24);
     }
 
     body {
@@ -638,6 +645,12 @@
       line-height: 1.55;
     }
 
+    /* Nested lists: no extra block gap, just a small breath under the parent item */
+    .preview-container li > ul,
+    .preview-container li > ol {
+      margin: 0.25em 0 0.4em 0;
+    }
+
     .preview-container code {
       background: var(--bg-tertiary);
       padding: 0.2em 0.4em;
@@ -776,10 +789,16 @@
       line-height: 1.5;
     }
 
-    /* Scrollbar */
+    /* Scrollbar — quiet on purpose. A thin, faint thread that tells you there's
+       more below without demanding attention; it only deepens when you point at it. */
+    * {
+      scrollbar-width: thin;                                  /* Firefox */
+      scrollbar-color: var(--scrollbar-thumb) transparent;   /* Firefox */
+    }
+
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 11px;
+      height: 11px;
     }
 
     ::-webkit-scrollbar-track {
@@ -787,12 +806,27 @@
     }
 
     ::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
+      background-color: var(--scrollbar-thumb);
+      border: 3px solid transparent;     /* transparent padding slims the visible thread to ~5px */
+      background-clip: padding-box;
+      border-radius: 999px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-tertiary);
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    /* In focus / zen mode, recede further: invisible until you reach into that edge */
+    body.zen-mode ::-webkit-scrollbar-thumb {
+      background-color: transparent;
+    }
+
+    body.zen-mode :hover::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
     }
 
     /* Sidebar collapse button (inside header) */
@@ -1384,6 +1418,55 @@
       justSavedId = null;   // glow is a one-time treat, not a permanent state
     }
 
+    // Turn lines of "-", "*", "+" or "1." items into nested <ul>/<ol> markup.
+    // Indentation is read in 2-space steps (tabs count as 2), so each Tab in the
+    // editor becomes one level of nesting here. Non-list lines pass through.
+    function buildLists(text) {
+      const lines = text.split('\n');
+      const re = /^([ \t]*)([-*+]|\d+\.)[ \t]+(.*)$/;
+      const segments = [];      // finished chunks, re-joined with '\n'
+      let textRun = [];         // run of consecutive non-list lines
+      let listHtml = '';        // the list currently being built
+      const stack = [];         // open lists: { tag, indent }
+
+      const closeAll = () => { while (stack.length) listHtml += '</li></' + stack.pop().tag + '>'; };
+      const flushList = () => { if (stack.length || listHtml) { closeAll(); segments.push(listHtml); listHtml = ''; } };
+      const flushText = () => { if (textRun.length) { segments.push(textRun.join('\n')); textRun = []; } };
+
+      for (const line of lines) {
+        const m = line.match(re);
+        if (!m) { flushList(); textRun.push(line); continue; }
+        flushText();
+
+        const indent = m[1].replace(/\t/g, '  ').length;
+        const tag = /\d+\./.test(m[2]) ? 'ol' : 'ul';
+        const content = m[3];
+
+        if (!stack.length || indent > stack[stack.length - 1].indent) {
+          // first item, or a deeper level → open a new (nested) list
+          stack.push({ tag, indent });
+          listHtml += '<' + tag + '><li>' + content;
+          continue;
+        }
+        // step back out to the level that matches this indent
+        while (stack.length > 1 && stack[stack.length - 1].indent > indent) {
+          listHtml += '</li></' + stack.pop().tag + '>';
+        }
+        const top = stack[stack.length - 1];
+        if (top.indent === indent && top.tag === tag) {
+          listHtml += '</li><li>' + content;                 // sibling, same kind
+        } else {
+          // same level but the marker kind changed (bullets ↔ numbers): swap list
+          if (top.indent === indent) listHtml += '</li></' + stack.pop().tag + '>';
+          stack.push({ tag, indent });
+          listHtml += '<' + tag + '><li>' + content;
+        }
+      }
+      flushList();
+      flushText();
+      return segments.join('\n');
+    }
+
     // Simple markdown parser
     function parseMarkdown(text) {
       if (!text.trim()) return '';
@@ -1421,13 +1504,9 @@
       html = html.replace(/^---$/gm, '<hr>');
       html = html.replace(/^\*\*\*$/gm, '<hr>');
 
-      // Lists — tag unordered and ordered items distinctly, then wrap each
-      // consecutive run in the right container so ordered items keep numbers.
-      html = html.replace(/^[\-\*] (.+)$/gm, '<li data-ul>$1</li>');
-      html = html.replace(/^\d+\. (.+)$/gm, '<li data-ol>$1</li>');
-      html = html.replace(/(?:<li data-ul>.*?<\/li>\n?)+/g, m => '<ul>' + m + '</ul>');
-      html = html.replace(/(?:<li data-ol>.*?<\/li>\n?)+/g, m => '<ol>' + m + '</ol>');
-      html = html.replace(/<li data-(?:ul|ol)>/g, '<li>');
+      // Lists — built line-by-line so indentation (2 spaces = one level, the
+      // same unit Tab inserts) renders as real nested <ul>/<ol> sub-lists.
+      html = buildLists(html);
 
       // Links [text](url)
       html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
@@ -1505,6 +1584,97 @@
       option.addEventListener('click', () => {
         setFormat(option.dataset.format);
       });
+    });
+
+    // Editor keys: Tab indents (pushing a bullet forward and holding it there),
+    // Shift+Tab outdents, and Enter carries a list on to the next item.
+    const INDENT = '  ';   // two spaces = one level (matches the markdown parser)
+    const editor = document.getElementById('content');
+
+    // Replace [from,to) with text via execCommand so native undo (Cmd+Z) still works,
+    // falling back to setRangeText where that command isn't available.
+    function editRange(from, to, text) {
+      editor.focus();
+      editor.setSelectionRange(from, to);
+      if (!document.execCommand || !document.execCommand('insertText', false, text)) {
+        editor.setRangeText(text, from, to, 'end');
+      }
+    }
+
+    function lineStartAt(value, pos) {
+      return value.lastIndexOf('\n', pos - 1) + 1;
+    }
+    function lineEndAt(value, pos) {
+      const nl = value.indexOf('\n', pos);
+      return nl === -1 ? value.length : nl;
+    }
+
+    editor.addEventListener('keydown', (e) => {
+      if (isPreviewMode) return;
+      const val = editor.value;
+      const selStart = editor.selectionStart;
+      const selEnd = editor.selectionEnd;
+      const collapsed = selStart === selEnd;
+      const listRe = /^([ \t]*)([-*+]|\d+\.)([ \t]+)(.*)$/;
+
+      // ---- Tab / Shift+Tab : indent / outdent ----
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const curLine = val.slice(lineStartAt(val, selStart), lineEndAt(val, selStart));
+        const onList = listRe.test(curLine);
+
+        // Plain prose + a single caret + plain Tab → just insert an indent here.
+        if (collapsed && !e.shiftKey && !onList) {
+          editRange(selStart, selEnd, INDENT);
+          return;
+        }
+
+        // Otherwise operate on whole lines (this is what pushes a bullet forward).
+        const blockStart = lineStartAt(val, selStart);
+        let refEnd = selEnd;
+        if (!collapsed && refEnd > selStart && val[refEnd - 1] === '\n') refEnd--;  // don't grab the line after a trailing newline
+        const blockEnd = lineEndAt(val, refEnd);
+        const block = val.slice(blockStart, blockEnd);
+
+        let newBlock, caretDelta;
+        if (e.shiftKey) {
+          const firstRemoved = (block.match(/^(\t| {1,2})/) || [''])[0].length;
+          newBlock = block.replace(/^(\t| {1,2})/gm, '');   // drop one level per line
+          caretDelta = -firstRemoved;
+        } else {
+          newBlock = block.replace(/^(?=.)/gm, INDENT);     // add one level to each non-empty line
+          caretDelta = INDENT.length;
+        }
+
+        editRange(blockStart, blockEnd, newBlock);
+        if (collapsed) {
+          const caret = Math.max(blockStart, selStart + caretDelta);
+          editor.setSelectionRange(caret, caret);
+        } else {
+          editor.setSelectionRange(blockStart, blockStart + newBlock.length);
+        }
+        return;
+      }
+
+      // ---- Enter : continue the current list item ----
+      if (e.key === 'Enter' && !e.shiftKey && collapsed) {
+        const ls = lineStartAt(val, selStart);
+        const fullLine = val.slice(ls, lineEndAt(val, selStart));
+        const m = fullLine.match(listRe);
+        if (!m) return;
+
+        const [, indentWs, marker, spacer, rest] = m;
+        // Enter on an empty item ("- " with nothing typed) clears the marker and breaks out.
+        if (rest.trim() === '') {
+          e.preventDefault();
+          editRange(ls, lineEndAt(val, selStart), '');
+          return;
+        }
+        e.preventDefault();
+        const nextMarker = /^\d+\.$/.test(marker) ? (parseInt(marker, 10) + 1) + '.' : marker;
+        editRange(selStart, selEnd, '\n' + indentWs + nextMarker + spacer);
+        return;
+      }
     });
 
     // Download button
