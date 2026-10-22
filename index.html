@@ -831,6 +831,46 @@
       margin: 1.5em 0;
     }
 
+    /* Tables: hairline grid, tinted header; wide tables scroll sideways */
+    .preview-container .table-wrap {
+      overflow-x: auto;
+      margin: 0 0 1.2em 0;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .preview-container table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875em;
+      line-height: 1.5;
+    }
+
+    .preview-container th,
+    .preview-container td {
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: top;
+      min-width: 7em;
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+
+    .preview-container th:last-child,
+    .preview-container td:last-child {
+      border-right: none;
+    }
+
+    .preview-container tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .preview-container th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
     textarea.hidden-for-preview {
       display: none;
     }
@@ -1808,6 +1848,58 @@
       return segments.join('\n');
     }
 
+    // Turn GitHub-style pipe tables into <table> markup. A table is a header row
+    // with pipes, then a |---|:--:|---:| separator row, then body rows until a line
+    // without a pipe. Each table becomes its own block (wrapped in a scroller so
+    // wide tables scroll sideways instead of squashing). "\|" is a literal pipe.
+    // Lines inside ``` code blocks are left alone.
+    function buildTables(text) {
+      const lines = text.split('\n');
+      const sepRe = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+      const splitRow = (line) => {
+        let s = line.trim().replace(/\\\|/g, '\u0000');
+        if (s.startsWith('|')) s = s.slice(1);
+        if (s.endsWith('|')) s = s.slice(0, -1);
+        return s.split('|').map(c => c.replace(/\u0000/g, '|').trim());
+      };
+      const out = [];
+      let inPre = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const next = lines[i + 1];
+        const startsTable = !inPre && line.includes('|') &&
+                            next !== undefined && next.includes('|') && sepRe.test(next);
+        if (!startsTable) {
+          if (line.includes('<pre>')) inPre = true;
+          if (line.includes('</pre>')) inPre = false;
+          out.push(line);
+          continue;
+        }
+
+        const head = splitRow(line);
+        const aligns = splitRow(next).map(c =>
+          c.startsWith(':') && c.endsWith(':') ? 'center' : c.endsWith(':') ? 'right' : c.startsWith(':') ? 'left' : '');
+        const cell = (tag, content, col) => {
+          const a = aligns[col] ? ' style="text-align:' + aligns[col] + '"' : '';
+          return '<' + tag + a + '>' + (content || '') + '</' + tag + '>';
+        };
+
+        let html = '<div class="table-wrap"><table><thead><tr>' +
+                   head.map((c, col) => cell('th', c, col)).join('') + '</tr></thead><tbody>';
+        i += 2;
+        while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
+          const cells = splitRow(lines[i]);
+          html += '<tr>' + head.map((_, col) => cell('td', cells[col], col)).join('') + '</tr>';
+          i++;
+        }
+        i--;
+        html += '</tbody></table></div>';
+        out.push('', html, '');
+      }
+      return out.join('\n');
+    }
+
     // Simple markdown parser
     function parseMarkdown(text) {
       if (!text.trim()) return '';
@@ -1849,6 +1941,9 @@
       // same unit Tab inserts) renders as real nested <ul>/<ol> sub-lists.
       html = buildLists(html);
 
+      // Tables — pipe rows with a |---| separator under the header row.
+      html = buildTables(html);
+
       // Links [text](url)
       html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
@@ -1858,7 +1953,7 @@
         block = block.trim();
         if (!block) return '';
         // Don't wrap if already wrapped in block element
-        if (/^<(h[1-6]|ul|ol|li|pre|blockquote|hr)/.test(block)) {
+        if (/^<(h[1-6]|ul|ol|li|pre|blockquote|hr|div)/.test(block)) {
           return block;
         }
         // Convert single newlines to <br> within paragraphs
